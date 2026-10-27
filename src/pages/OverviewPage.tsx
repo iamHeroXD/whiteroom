@@ -1,21 +1,22 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   PlaySquare,
   ArrowRight,
-  TrendingUp,
   Shield,
   Activity,
   CheckCircle2,
   BookMarked,
   Sparkles,
-  Award,
-  ChevronRight,
-  Calendar,
+  Download,
+  Info,
+  Quote,
 } from 'lucide-react';
 import { useApp } from '../state/AppContext';
 import { ALL_SCENARIOS, getScenarioById } from '../data/scenarios';
 import { TRAINING_MODULES } from '../data/modules';
 import { SkillScores } from '../types';
+import { RadarChart } from '../components/ui/RadarChart';
+import { sounds } from '../utils/audio';
 
 export const OverviewPage: React.FC = () => {
   const {
@@ -25,7 +26,47 @@ export const OverviewPage: React.FC = () => {
     setDestination,
     setActiveScenarioId,
     latestAssessment,
+    setIsOnboardingOpen,
+    preferences,
   } = useApp();
+
+  const [activeAxiomIndex, setActiveAxiomIndex] = useState(0);
+
+  const axioms = [
+    { quote: "He who angers you controls you.", context: "Operational Axiom 01 — Impulse Decoupling" },
+    { quote: "Silence is an active, structured response.", context: "Operational Axiom 02 — Conversational Pacing" },
+    { quote: "Never defend where you need only clarify.", context: "Operational Axiom 03 — Frame Preservation" },
+    { quote: "When you corner an adversary, leave an honorable bridge of retreat.", context: "Operational Axiom 04 — Tactical De-escalation" },
+    { quote: "A boundary explained ten times is an invitation to negotiate.", context: "Operational Axiom 05 — Boundary Precision" },
+  ];
+
+  const handleExportDossier = () => {
+    sounds.playClick(preferences.soundEnabled);
+    const dossier = {
+      system: 'WHITE ROOM CANDIDATE DOSSIER',
+      exportDate: new Date().toISOString(),
+      candidateId: '048',
+      operationalStage: overallStage,
+      completedScenarios: completedScenarioCount,
+      journalEntriesCount: progress.journalEntries.length,
+      latestAssessmentScores: latestAssessment?.scores || 'Not yet generated',
+      recentAttempts: progress.attempts.slice(0, 10).map(a => ({
+        scenarioTitle: a.scenarioTitle,
+        category: a.category,
+        optionChosen: a.selectedOptionLabel,
+        reflection: a.userReflection || 'None',
+        date: new Date(a.timestamp).toLocaleDateString(),
+      })),
+    };
+
+    const blob = new Blob([JSON.stringify(dossier, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `white-room-dossier-stage-${overallStage.toLowerCase()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
 
   // Find next recommended scenario: find first scenario not yet completed
   const completedIds = new Set(progress.attempts.map(a => a.scenarioId));
@@ -82,9 +123,30 @@ export const OverviewPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center space-x-3">
+        <div className="flex flex-wrap items-center gap-3">
           <button
             onClick={() => {
+              sounds.playClick(preferences.soundEnabled);
+              setIsOnboardingOpen(true);
+            }}
+            className="px-3.5 py-2 rounded border border-room-border dark:border-room-darkBorder bg-room-surface dark:bg-room-darkSurface text-xs font-mono text-room-muted hover:text-room-text dark:hover:text-room-darkText flex items-center space-x-1.5 transition-colors"
+          >
+            <Info size={14} className="text-amber-500" />
+            <span>How White Room Works</span>
+          </button>
+
+          <button
+            onClick={handleExportDossier}
+            className="px-3.5 py-2 rounded border border-room-border dark:border-room-darkBorder bg-room-surface dark:bg-room-darkSurface text-xs font-mono text-room-muted hover:text-room-text dark:hover:text-room-darkText flex items-center space-x-1.5 transition-colors"
+            title="Download Candidate Telemetry JSON"
+          >
+            <Download size={14} />
+            <span>Export Dossier</span>
+          </button>
+
+          <button
+            onClick={() => {
+              sounds.playClick(preferences.soundEnabled);
               setActiveScenarioId(nextScenario.id);
               setDestination('simulator');
             }}
@@ -94,6 +156,30 @@ export const OverviewPage: React.FC = () => {
             <span>Resume Drill #{nextScenario.number}</span>
           </button>
         </div>
+      </div>
+
+      {/* Daily Tactical Axiom Banner */}
+      <div className="p-4 sm:p-5 rounded-xl border border-room-border dark:border-room-darkBorder bg-room-surface/80 dark:bg-room-darkSurface/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+        <div className="flex items-center space-x-3">
+          <div className="w-8 h-8 rounded border border-room-border dark:border-room-darkBorder bg-room-bg dark:bg-room-darkBg flex items-center justify-center flex-shrink-0">
+            <Quote size={15} className="text-room-text dark:text-room-darkText" />
+          </div>
+          <div>
+            <span className="font-mono text-[10px] text-room-muted uppercase tracking-wider block">
+              {axioms[activeAxiomIndex].context}
+            </span>
+            <p className="font-medium text-room-text dark:text-room-darkText italic text-sm">
+              "{axioms[activeAxiomIndex].quote}"
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={() => setActiveAxiomIndex(prev => (prev + 1) % axioms.length)}
+          className="text-[11px] font-mono text-room-muted hover:text-room-text dark:hover:text-room-darkText underline self-end sm:self-center flex-shrink-0"
+        >
+          Next Axiom →
+        </button>
       </div>
 
       {/* Metric Tiles Bar */}
@@ -200,15 +286,15 @@ export const OverviewPage: React.FC = () => {
 
       {/* Two Column Layout: Skill Profile vs Recent Decisions */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left Column: Skill Profile (7 Cols) */}
-        <div className="lg:col-span-7 space-y-6">
+        {/* Left Column: Interactive Multi-Axis Radar Matrix (7 Cols) */}
+        <div className="lg:col-span-7 space-y-4">
           <div className="flex items-center justify-between">
             <div>
               <span className="font-mono text-xs uppercase tracking-widest text-room-muted block">
                 DIAGNOSTIC MATRIX
               </span>
               <h3 className="text-lg font-medium text-room-text dark:text-room-darkText mt-0.5">
-                Current Skill Profile
+                Multi-Axis Skill Profile
               </h3>
             </div>
             <button
@@ -219,28 +305,12 @@ export const OverviewPage: React.FC = () => {
             </button>
           </div>
 
-          <div className="p-6 rounded-xl border border-room-border dark:border-room-darkBorder bg-room-surface dark:bg-room-darkSurface space-y-5">
-            {skillList.map(item => (
-              <div key={item.key} className="space-y-1.5">
-                <div className="flex justify-between items-center text-xs">
-                  <span className="font-medium text-room-text dark:text-room-darkText">
-                    {item.label}
-                  </span>
-                  <span className="font-mono text-room-muted">{item.score}%</span>
-                </div>
-                {/* Visual Bar Indicator */}
-                <div className="w-full h-2 rounded-full bg-room-subtle dark:bg-room-darkSubtle overflow-hidden">
-                  <div
-                    className="h-full bg-room-text dark:bg-room-darkText rounded-full transition-all duration-500 ease-out"
-                    style={{ width: `${item.score}%` }}
-                  />
-                </div>
-              </div>
-            ))}
+          <div className="p-6 rounded-xl border border-room-border dark:border-room-darkBorder bg-room-surface dark:bg-room-darkSurface flex flex-col items-center">
+            {/* Interactive SVG Radar Chart */}
+            <RadarChart scores={skills} size={300} className="my-2" />
 
-            <div className="pt-4 border-t border-room-border dark:border-room-darkBorder flex items-center justify-between text-[11px] font-mono text-room-muted">
+            <div className="w-full mt-4 pt-3 border-t border-room-border dark:border-room-darkBorder flex items-center justify-between text-[11px] font-mono text-room-muted">
               <span>
-                Source:{' '}
                 {latestAssessment
                   ? `Assessment dated ${new Date(latestAssessment.timestamp).toLocaleDateString()}`
                   : 'Demonstration baseline protocol'}

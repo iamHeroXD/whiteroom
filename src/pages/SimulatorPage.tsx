@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import confetti from 'canvas-confetti';
 import {
   ArrowLeft,
   ArrowRight,
@@ -14,11 +16,14 @@ import {
   HelpCircle,
   Save,
   ChevronRight,
-  Share2,
+  Copy,
+  Check,
+  Zap,
 } from 'lucide-react';
 import { useApp } from '../state/AppContext';
 import { ALL_SCENARIOS, getScenarioById } from '../data/scenarios';
 import { Scenario, ScenarioOption, ScenarioBranch } from '../types';
+import { sounds } from '../utils/audio';
 
 export const SimulatorPage: React.FC = () => {
   const {
@@ -29,7 +34,7 @@ export const SimulatorPage: React.FC = () => {
     toggleSaveScenario,
     isScenarioSaved,
     addJournalEntry,
-    completedScenarioCount,
+    preferences,
   } = useApp();
 
   const [currentScenario, setCurrentScenario] = useState<Scenario>(() => {
@@ -42,6 +47,7 @@ export const SimulatorPage: React.FC = () => {
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [userReflection, setUserReflection] = useState('');
   const [reflectionSavedToast, setReflectionSavedToast] = useState(false);
+  const [copiedScript, setCopiedScript] = useState(false);
 
   // Sync when activeScenarioId changes from sidebar or command palette
   useEffect(() => {
@@ -85,6 +91,24 @@ export const SimulatorPage: React.FC = () => {
   const handleSubmitDecision = () => {
     if (!selectedOption) return;
     setIsSubmitted(true);
+    sounds.playSubmit(preferences.soundEnabled);
+
+    // If strong tactical regulation or strategy, fire celebration
+    if (selectedOption.feedback.scoreIndicator.emotionalRegulation >= 85) {
+      setTimeout(() => {
+        sounds.playSuccess(preferences.soundEnabled);
+        try {
+          confetti({
+            particleCount: 45,
+            spread: 60,
+            origin: { y: 0.75 },
+            colors: ['#171717', '#777777', '#c0c0c0', '#22c55e'],
+          });
+        } catch {
+          // Ignore
+        }
+      }, 250);
+    }
 
     // Record the attempt in local state
     recordScenarioAttempt({
@@ -96,6 +120,17 @@ export const SimulatorPage: React.FC = () => {
       userReflection: userReflection.trim() || undefined,
       scoreIndicators: selectedOption.feedback.scoreIndicator,
     });
+  };
+
+  const handleCopyScript = (text: string) => {
+    try {
+      navigator.clipboard.writeText(text);
+      setCopiedScript(true);
+      sounds.playClick(preferences.soundEnabled);
+      setTimeout(() => setCopiedScript(false), 2500);
+    } catch {
+      // Ignore
+    }
   };
 
   const handleBranchContinue = (nextBranchId: string) => {
@@ -168,18 +203,43 @@ export const SimulatorPage: React.FC = () => {
       </div>
 
       {/* Main Scenario Header */}
-      <div className="space-y-3">
+      <div className="space-y-4">
+        {/* Interactive 3-Step Guided Progress Tracker */}
+        <div className="grid grid-cols-3 gap-2 p-1.5 rounded-lg border border-room-border/80 dark:border-room-darkBorder/80 bg-room-surface/60 dark:bg-room-darkSurface/60 text-center font-mono text-[10px]">
+          <div className="py-1 px-2 rounded bg-room-text dark:bg-room-darkText text-room-surface dark:text-room-darkBg font-semibold">
+            01 Observe & Context
+          </div>
+          <div
+            className={`py-1 px-2 rounded transition-colors ${
+              selectedOptionId
+                ? 'bg-room-text/90 dark:bg-room-darkText/90 text-room-surface dark:text-room-darkBg font-semibold'
+                : 'text-room-muted'
+            }`}
+          >
+            02 Choose Tactical Response
+          </div>
+          <div
+            className={`py-1 px-2 rounded transition-colors ${
+              isSubmitted
+                ? 'bg-room-text dark:bg-room-darkText text-room-surface dark:text-room-darkBg font-semibold'
+                : 'text-room-muted'
+            }`}
+          >
+            03 Deconstruct Strategy
+          </div>
+        </div>
+
         <div className="flex flex-wrap items-center gap-2 text-xs font-mono text-room-muted">
-          <span className="px-2 py-0.5 rounded bg-room-subtle dark:bg-room-darkSubtle text-room-text dark:text-room-darkText uppercase">
+          <span className="px-2 py-0.5 rounded bg-room-subtle dark:bg-room-darkSubtle text-room-text dark:text-room-darkText uppercase font-semibold">
             {currentScenario.category.replace('-', ' ')}
           </span>
           <span>•</span>
           <span>SETTING: {currentScenario.setting}</span>
           <span>•</span>
-          <span>DURATION: {currentScenario.estimatedDuration}</span>
+          <span>EST. TIME: {currentScenario.estimatedDuration}</span>
           {activeBranchId && (
-            <span className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold">
-              STAGE 2: BRANCH EXPANSION
+            <span className="px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold animate-pulse">
+              STAGE 2: BRANCH REACTION
             </span>
           )}
         </div>
@@ -458,11 +518,30 @@ export const SimulatorPage: React.FC = () => {
             )}
           </div>
 
-          {/* 05. Alternative Natural Response */}
-          <div className="p-6 rounded-xl border-2 border-dashed border-room-border dark:border-room-darkBorder bg-room-subtle/40 dark:bg-room-darkSubtle/40 space-y-2">
-            <div className="flex items-center space-x-2 text-xs font-mono uppercase tracking-wider text-room-muted">
-              <MessageSquare size={15} />
-              <span>05 — Alternative Natural Spoken Response</span>
+          {/* 05. Alternative Natural Response with Instant Copy */}
+          <div className="p-6 rounded-xl border-2 border-dashed border-room-border dark:border-room-darkBorder bg-room-subtle/40 dark:bg-room-darkSubtle/40 space-y-3 relative">
+            <div className="flex items-center justify-between text-xs font-mono uppercase tracking-wider text-room-muted">
+              <div className="flex items-center space-x-2">
+                <MessageSquare size={15} />
+                <span>05 — Alternative Natural Spoken Response</span>
+              </div>
+              <button
+                onClick={() => handleCopyScript(selectedOption.feedback.alternativeNaturalResponse)}
+                className="flex items-center space-x-1 px-2.5 py-1 rounded border border-room-border text-[11px] font-mono text-room-muted hover:text-room-text dark:hover:text-room-darkText transition-colors"
+                title="Copy script to clipboard"
+              >
+                {copiedScript ? (
+                  <>
+                    <Check size={12} className="text-emerald-500" />
+                    <span className="text-emerald-600 dark:text-emerald-400">Copied!</span>
+                  </>
+                ) : (
+                  <>
+                    <Copy size={12} />
+                    <span>Copy Phrasing</span>
+                  </>
+                )}
+              </button>
             </div>
             <blockquote className="text-base sm:text-lg font-serif italic text-room-text dark:text-room-darkText pl-4 border-l-2 border-room-text dark:border-room-darkText">
               "{selectedOption.feedback.alternativeNaturalResponse}"

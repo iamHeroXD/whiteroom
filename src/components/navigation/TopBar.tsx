@@ -8,10 +8,11 @@ import {
   HelpCircle,
   PlaySquare,
   Sparkles,
-  Command,
+  Compass,
 } from 'lucide-react';
 import { useApp } from '../../state/AppContext';
 import { NavigationDestination } from '../../types';
+import { sounds } from '../../utils/audio';
 
 export const TopBar: React.FC = () => {
   const {
@@ -20,7 +21,7 @@ export const TopBar: React.FC = () => {
     preferences,
     updatePreferences,
     setIsCommandPaletteOpen,
-    activeScenarioId,
+    setIsOnboardingOpen,
   } = useApp();
 
   const getPageTitle = (dest: NavigationDestination): { title: string; category?: string } => {
@@ -90,7 +91,10 @@ export const TopBar: React.FC = () => {
         {/* Quick Simulator Resume Button if not in simulator */}
         {destination !== 'simulator' && destination !== 'intro' && (
           <button
-            onClick={() => setDestination('simulator')}
+            onClick={() => {
+              sounds.playClick(preferences.soundEnabled);
+              setDestination('simulator');
+            }}
             className="hidden lg:flex items-center space-x-1.5 px-3 py-1.5 text-xs font-mono font-medium rounded bg-room-text dark:bg-room-darkText text-room-surface dark:text-room-darkBg hover:opacity-90 transition-opacity"
           >
             <PlaySquare size={13} />
@@ -98,9 +102,26 @@ export const TopBar: React.FC = () => {
           </button>
         )}
 
+        {/* System Tour / Quick Guide Button */}
+        <button
+          onClick={() => {
+            sounds.playClick(preferences.soundEnabled);
+            setIsOnboardingOpen(true);
+          }}
+          className="flex items-center space-x-1 px-2.5 py-1.5 rounded border border-room-border dark:border-room-darkBorder text-xs font-mono text-room-muted hover:text-room-text dark:hover:text-room-darkText transition-colors"
+          title="How White Room Works"
+        >
+          <Sparkles size={13} className="text-amber-500" />
+          <span className="hidden sm:inline">Guide</span>
+        </button>
+
         {/* Sound toggle */}
         <button
-          onClick={() => updatePreferences({ soundEnabled: !preferences.soundEnabled })}
+          onClick={() => {
+            const next = !preferences.soundEnabled;
+            if (next) sounds.playSuccess(true);
+            updatePreferences({ soundEnabled: next });
+          }}
           className={`p-2 rounded border border-room-border dark:border-room-darkBorder hover:bg-room-subtle dark:hover:bg-room-darkSubtle transition-colors ${
             preferences.soundEnabled ? 'text-room-text dark:text-room-darkText' : 'text-room-muted dark:text-room-darkMuted'
           }`}
@@ -112,11 +133,12 @@ export const TopBar: React.FC = () => {
 
         {/* Theme toggle */}
         <button
-          onClick={() =>
+          onClick={() => {
+            sounds.playClick(preferences.soundEnabled);
             updatePreferences({
               theme: preferences.theme === 'dark' ? 'light' : 'dark',
-            })
-          }
+            });
+          }}
           className="p-2 rounded border border-room-border dark:border-room-darkBorder text-room-text dark:text-room-darkText hover:bg-room-subtle dark:hover:bg-room-darkSubtle transition-colors"
           title={`Switch to ${preferences.theme === 'dark' ? 'Light' : 'Dark'} Mode`}
           aria-label="Toggle Theme"

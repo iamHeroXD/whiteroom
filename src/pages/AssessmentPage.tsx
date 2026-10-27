@@ -11,12 +11,15 @@ import {
   Calendar,
   AlertCircle,
 } from 'lucide-react';
+import confetti from 'canvas-confetti';
 import { useApp } from '../state/AppContext';
 import {
   ASSESSMENT_QUESTIONS,
   calculateAssessmentResult,
 } from '../data/assessment';
 import { SkillScores, AssessmentResult } from '../types';
+import { RadarChart } from '../components/ui/RadarChart';
+import { sounds } from '../utils/audio';
 
 type AssessmentFlowState = 'intro' | 'questionnaire' | 'review' | 'results';
 
@@ -80,6 +83,18 @@ export const AssessmentPage: React.FC = () => {
       timestamp: Date.now(),
     });
     setFlowState('results');
+    sounds.playSuccess(progress.preferences.soundEnabled);
+
+    try {
+      confetti({
+        particleCount: 65,
+        spread: 80,
+        origin: { y: 0.6 },
+        colors: ['#171717', '#444444', '#aaaaaa', '#ffffff'],
+      });
+    } catch {
+      // Ignore
+    }
   };
 
   const handleRetake = () => {
@@ -368,10 +383,15 @@ export const AssessmentPage: React.FC = () => {
           {/* Skill Radar / Dimension Grid */}
           <div className="p-6 sm:p-8 rounded-xl border border-room-border dark:border-room-darkBorder bg-room-surface dark:bg-room-darkSurface space-y-6">
             <h3 className="text-xs font-mono uppercase tracking-widest text-room-muted">
-              Tactical Dimension Breakdown
+              Tactical Dimension Hexagonal Radar
             </h3>
 
-            <div className="space-y-4">
+            {/* Radar Chart Visual */}
+            <div className="flex justify-center py-2">
+              <RadarChart scores={activeResult.scores} size={320} />
+            </div>
+
+            <div className="space-y-4 pt-4 border-t border-room-border dark:border-room-darkBorder">
               {Object.entries(activeResult.scores).map(([key, val]) => {
                 const labelMap: Record<string, string> = {
                   emotionalRegulation: 'Emotional Regulation',

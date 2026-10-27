@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../../state/AppContext';
 import { NavigationDestination } from '../../types';
+import { sounds } from '../../utils/audio';
 
 interface NavItem {
   id: NavigationDestination;
@@ -53,6 +54,7 @@ export const Sidebar: React.FC = () => {
   ];
 
   const handleNavClick = (dest: NavigationDestination) => {
+    sounds.playClick(progress.preferences.soundEnabled);
     setDestination(dest);
     setIsMobileOpen(false);
   };

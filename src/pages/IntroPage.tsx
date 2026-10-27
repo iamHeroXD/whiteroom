@@ -5,19 +5,20 @@ import {
   Eye,
   Brain,
   Sparkles,
-  BookOpen,
-  PlaySquare,
-  CheckCircle2,
   ChevronRight,
   Sun,
   Moon,
+  Info,
+  Check,
+  X as XIcon,
 } from 'lucide-react';
 import { useApp } from '../state/AppContext';
 import { TRAINING_MODULES } from '../data/modules';
 import { ALL_SCENARIOS } from '../data/scenarios';
+import { sounds } from '../utils/audio';
 
 export const IntroPage: React.FC = () => {
-  const { setDestination, setActiveScenarioId, preferences, updatePreferences } = useApp();
+  const { setDestination, setActiveScenarioId, preferences, updatePreferences, setIsOnboardingOpen } = useApp();
   const [selectedPreviewChoice, setSelectedPreviewChoice] = useState<string | null>(null);
 
   const previewScenario = ALL_SCENARIOS[0]; // Scenario 001: The Public Challenge
@@ -44,6 +45,17 @@ export const IntroPage: React.FC = () => {
         </div>
 
         <div className="flex items-center space-x-3 sm:space-x-4">
+          <button
+            onClick={() => {
+              sounds.playClick(preferences.soundEnabled);
+              setIsOnboardingOpen(true);
+            }}
+            className="flex items-center space-x-1.5 px-3 py-1.5 rounded border border-room-border dark:border-room-darkBorder text-xs font-mono text-room-muted hover:text-room-text dark:hover:text-room-darkText transition-colors"
+          >
+            <Sparkles size={13} className="text-amber-500" />
+            <span>How It Works</span>
+          </button>
+
           <button
             onClick={() =>
               updatePreferences({
@@ -207,6 +219,68 @@ export const IntroPage: React.FC = () => {
               </div>
               <div className="mt-6 pt-4 border-t border-room-border dark:border-room-darkBorder font-mono text-[11px] text-room-muted">
                 Key Skill: Deliberate Metacognition
+              </div>
+            </div>
+          </div>
+
+          {/* Comparison Table: Traditional Advice vs White Room Method */}
+          <div className="mt-16 pt-12 border-t border-room-border dark:border-room-darkBorder">
+            <div className="text-center max-w-xl mx-auto mb-8">
+              <span className="font-mono text-xs uppercase tracking-widest text-room-muted">
+                PARADIGM SHIFT
+              </span>
+              <h3 className="text-xl sm:text-2xl font-light text-room-text dark:text-room-darkText mt-1">
+                Conventional Advice vs. White Room Protocol
+              </h3>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+              <div className="p-5 rounded-lg border border-rose-200 dark:border-rose-950/60 bg-rose-50/40 dark:bg-rose-950/10 space-y-3">
+                <span className="font-mono text-rose-700 dark:text-rose-400 font-semibold block uppercase">
+                  ✕ Conventional Instinct / Advice
+                </span>
+                <ul className="space-y-2 text-room-muted">
+                  <li className="flex items-start space-x-2">
+                    <span className="text-rose-500 font-mono">•</span>
+                    <span>Vent anger immediately or suppress it with tight smiles.</span>
+                  </li>
+                  <li className="flex items-start space-x-2">
+                    <span className="text-rose-500 font-mono">•</span>
+                    <span>Over-explain boundaries and apologize repeatedly for saying no.</span>
+                  </li>
+                  <li className="flex items-start space-x-2">
+                    <span className="text-rose-500 font-mono">•</span>
+                    <span>Reply instantly to off-hours messages out of anxiety.</span>
+                  </li>
+                  <li className="flex items-start space-x-2">
+                    <span className="text-rose-500 font-mono">•</span>
+                    <span>Humiliate rivals publicly to prove dominance.</span>
+                  </li>
+                </ul>
+              </div>
+
+              <div className="p-5 rounded-lg border border-emerald-200 dark:border-emerald-950/60 bg-emerald-50/40 dark:bg-emerald-950/10 space-y-3">
+                <span className="font-mono text-emerald-700 dark:text-emerald-400 font-semibold block uppercase">
+                  ✓ The White Room Protocol
+                </span>
+                <ul className="space-y-2 text-room-text dark:text-room-darkText">
+                  <li className="flex items-start space-x-2">
+                    <span className="text-emerald-500 font-mono">•</span>
+                    <span>Enforce the 3-second diagnostic pause; isolate data from emotion.</span>
+                  </li>
+                  <li className="flex items-start space-x-2">
+                    <span className="text-emerald-500 font-mono">•</span>
+                    <span>Boundaries require zero apology; "I am not available" is complete.</span>
+                  </li>
+                  <li className="flex items-start space-x-2">
+                    <span className="text-emerald-500 font-mono">•</span>
+                    <span>Control response latency; train others to respect your focus.</span>
+                  </li>
+                  <li className="flex items-start space-x-2">
+                    <span className="text-emerald-500 font-mono">•</span>
+                    <span>Preserve the adversary's bridge; never corner someone's ego.</span>
+                  </li>
+                </ul>
               </div>
             </div>
           </div>

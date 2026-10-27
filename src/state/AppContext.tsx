@@ -26,6 +26,8 @@ interface AppContextType {
   setActiveModuleId: (id?: ModuleCategory) => void;
   isCommandPaletteOpen: boolean;
   setIsCommandPaletteOpen: (open: boolean) => void;
+  isOnboardingOpen: boolean;
+  setIsOnboardingOpen: (open: boolean) => void;
 
   // Preferences
   preferences: UserPreferences;
@@ -99,6 +101,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [activeScenarioId, setActiveScenarioId] = useState<string | undefined>('sc-001');
   const [activeModuleId, setActiveModuleId] = useState<ModuleCategory | undefined>('social-intelligence');
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
 
   // Sync to local storage
   useEffect(() => {
@@ -268,6 +271,8 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         setActiveModuleId,
         isCommandPaletteOpen,
         setIsCommandPaletteOpen,
+        isOnboardingOpen,
+        setIsOnboardingOpen,
         preferences: progress.preferences,
         updatePreferences,
         progress,

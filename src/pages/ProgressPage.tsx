@@ -14,7 +14,8 @@ import {
 import { useApp } from '../state/AppContext';
 import { ALL_SCENARIOS } from '../data/scenarios';
 import { TRAINING_MODULES } from '../data/modules';
-import { TrainingStage } from '../types';
+import { TrainingStage, SkillScores } from '../types';
+import { RadarChart } from '../components/ui/RadarChart';
 
 export const ProgressPage: React.FC = () => {
   const { progress, overallStage, completedScenarioCount, setDestination } = useApp();
@@ -96,7 +97,7 @@ export const ProgressPage: React.FC = () => {
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {stages.map((st, idx) => {
+          {stages.map((st) => {
             const isUnlocked = stageOrder[st.stage] <= currentLevelNumber;
             const isCurrent = st.stage === overallStage;
 
@@ -145,6 +146,27 @@ export const ProgressPage: React.FC = () => {
           })}
         </div>
       </section>
+
+      {/* Hexagonal Radar Mastery Matrix */}
+      {progress.assessmentResults.length > 0 && (
+        <section className="p-6 sm:p-8 rounded-xl border border-room-border dark:border-room-darkBorder bg-room-surface dark:bg-room-darkSurface flex flex-col items-center">
+          <div className="w-full flex items-center justify-between pb-4 border-b border-room-border dark:border-room-darkBorder mb-6">
+            <div>
+              <span className="font-mono text-xs uppercase tracking-widest text-room-muted block">
+                TACTICAL PROFILE
+              </span>
+              <h3 className="text-lg font-medium text-room-text dark:text-room-darkText mt-0.5">
+                Hexagonal Skill Footprint
+              </h3>
+            </div>
+            <span className="font-mono text-xs text-room-muted">
+              Interactive 6-Axis Visualization
+            </span>
+          </div>
+
+          <RadarChart scores={progress.assessmentResults[0].scores} size={320} />
+        </section>
+      )}
 
       {/* SVG Analytics Chart: Domain Practice Distribution */}
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-8">
