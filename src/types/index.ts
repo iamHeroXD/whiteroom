@@ -156,6 +156,8 @@ export interface UserPreferences {
   theme: 'light' | 'dark';
   reducedMotion: boolean;
   soundEnabled: boolean;
+  ambientSound: boolean;
+  pressureMode: boolean;
   interfaceDensity: 'compact' | 'comfortable';
 }
 
@@ -167,6 +169,12 @@ export interface UserProgress {
   preferences: UserPreferences;
   currentStage: TrainingStage;
   lastActiveScenarioId?: string;
+  xp: number;
+  streak: number;
+  lastActiveDate?: string;
+  unlockedAchievements: string[];
+  flashDrillHighScore: number;
+  pauseCount: number;
 }
 
 export type NavigationDestination =
@@ -180,4 +188,6 @@ export type NavigationDestination =
   | 'journal'
   | 'saved'
   | 'settings'
-  | 'methodology';
+  | 'methodology'
+  | 'flash-drills'
+  | 'achievements';

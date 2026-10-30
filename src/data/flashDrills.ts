@@ -1,0 +1,398 @@
+export interface FlashDrillQuestion {
+  id: string;
+  speaker: string;
+  dialogue: string;
+  context: string;
+  options: {
+    id: string;
+    label: string;
+    intent: string;
+    isCorrect: boolean;
+    explanation: string;
+  }[];
+  trapExplanation: string;
+  category: 'manipulation' | 'passive-aggression' | 'status-test' | 'appeasement' | 'boundary-probe';
+}
+
+export const FLASH_DRILL_QUESTIONS: FlashDrillQuestion[] = [
+  {
+    id: 'fd-1',
+    speaker: 'Colleague at Coffee Bar',
+    context: 'After your proposal was praised by the VP',
+    dialogue: '"Must be nice to be the executive favorite. Some of us actually have to do grunt work."',
+    category: 'status-test',
+    options: [
+      {
+        id: 'o1',
+        label: 'A',
+        intent: 'Status Envy & Covert Dismissal',
+        isCorrect: true,
+        explanation: 'Frames your competence as mere favoritism to protect their own ego and diminish your merit in front of peers.',
+      },
+      {
+        id: 'o2',
+        label: 'B',
+        intent: 'Genuine Workload Complaint',
+        isCorrect: false,
+        explanation: 'A legitimate workload complaint targets task distribution, not personal attacks on your status.',
+      },
+      {
+        id: 'o3',
+        label: 'C',
+        intent: 'Playful In-Group Bonding',
+        isCorrect: false,
+        explanation: 'The barbed phrasing "must be nice" carries hostile contempt rather than collaborative affection.',
+      },
+      {
+        id: 'o4',
+        label: 'D',
+        intent: 'Constructive Upward Feedback',
+        isCorrect: false,
+        explanation: 'Feedback involves actionable requests; this is passive status devaluation.',
+      },
+    ],
+    trapExplanation: 'Do not defend yourself by listing your hours. Acknowledge their workload or smile and walk away without validating the "favorite" label.',
+  },
+  {
+    id: 'fd-2',
+    speaker: 'Project Partner (Friday 7 PM)',
+    context: 'Asking you to take their weekend shift',
+    dialogue: '"If you can’t cover for me, I guess the whole client demo will just be ruined. But it’s fine, enjoy your weekend."',
+    category: 'manipulation',
+    options: [
+      {
+        id: 'o1',
+        label: 'A',
+        intent: 'Authentic Vulnerability',
+        isCorrect: false,
+        explanation: 'Authentic requests ask directly; they do not manufacture catastrophic guilt.',
+      },
+      {
+        id: 'o2',
+        label: 'B',
+        intent: 'Extortion via Manufactured Catastrophe',
+        isCorrect: true,
+        explanation: 'Transfers responsibility for their poor planning onto your conscience by threatening disaster.',
+      },
+      {
+        id: 'o3',
+        label: 'C',
+        intent: 'Respectful Boundary Assertion',
+        isCorrect: false,
+        explanation: 'Adding "enjoy your weekend" with sarcastic doom is passive-aggressive manipulation.',
+      },
+      {
+        id: 'o4',
+        label: 'D',
+        intent: 'Logistical Milestone Audit',
+        isCorrect: false,
+        explanation: 'There is zero objective logistical data in this emotional statement.',
+      },
+    ],
+    trapExplanation: 'Reject the premise: "I’m not available this weekend, but let’s triage the essential items on Monday morning."',
+  },
+  {
+    id: 'fd-3',
+    speaker: 'Senior Engineer in Code Review',
+    context: 'Reviewing an innovative refactoring PR',
+    dialogue: '"We’ve never done it this way in 6 years. Are you trying to reinvent the wheel just to look clever?"',
+    category: 'boundary-probe',
+    options: [
+      {
+        id: 'o1',
+        label: 'A',
+        intent: 'Territorial Gatekeeping & Motivation Attack',
+        isCorrect: true,
+        explanation: 'Attacks your presumed psychological motive ("look clever") rather than evaluating technical benchmark metrics.',
+      },
+      {
+        id: 'o2',
+        label: 'B',
+        intent: 'Architectural Optimization Inquiry',
+        isCorrect: false,
+        explanation: 'An optimization inquiry asks about latency, memory, or maintainability.',
+      },
+      {
+        id: 'o3',
+        label: 'C',
+        intent: 'Friendly Mentorship Calibration',
+        isCorrect: false,
+        explanation: 'Labeling you as trying to "look clever" is an ego challenge, not teaching.',
+      },
+      {
+        id: 'o4',
+        label: 'D',
+        intent: 'Security Vulnerability Alert',
+        isCorrect: false,
+        explanation: 'Nothing in the critique addresses security.',
+      },
+    ],
+    trapExplanation: 'Never defend your motives. Redirect strictly to technical data: "The benchmark reduces query latency by 42%. Let’s check the load metrics."',
+  },
+  {
+    id: 'fd-4',
+    speaker: 'Roommate / Peer',
+    context: 'After borrowing your car without asking and scraping the bumper',
+    dialogue: '"I’m sorry if you’re upset, but you always overreact to minor scratches. You’re too materialistic."',
+    category: 'manipulation',
+    options: [
+      {
+        id: 'o1',
+        label: 'A',
+        intent: 'Genuine Remorse & Restitution',
+        isCorrect: false,
+        explanation: 'An authentic apology says "I was wrong and I will pay for it", not "you are too materialistic".',
+      },
+      {
+        id: 'o2',
+        label: 'B',
+        intent: 'Blame Inversion & Moral Gaslighting',
+        isCorrect: true,
+        explanation: 'Reframes property damage as YOUR moral flaw ("materialistic") to escape accountability and repair costs.',
+      },
+      {
+        id: 'o3',
+        label: 'C',
+        intent: 'Constructive Philosophical Debate',
+        isCorrect: false,
+        explanation: 'Weaponizing philosophy to avoid paying for damage is dishonest evasion.',
+      },
+      {
+        id: 'o4',
+        label: 'D',
+        intent: 'Stress De-escalation',
+        isCorrect: false,
+        explanation: 'Insulting someone’s values escalates conflict rather than calming it.',
+      },
+    ],
+    trapExplanation: 'Do not debate whether you are materialistic. Re-anchor to the physical fact: "Regardless of philosophy, you borrowed it without asking and damaged it. The repair estimate is \$250."',
+  },
+  {
+    id: 'fd-5',
+    speaker: 'Team Lead in Standup',
+    context: 'Noticeably tired and speaking in short, brisk sentences',
+    dialogue: '"Next ticket. Quick update only. We don’t have time for side stories today."',
+    category: 'appeasement',
+    options: [
+      {
+        id: 'o1',
+        label: 'A',
+        intent: 'Personal Hatred Directed At You',
+        isCorrect: false,
+        explanation: 'Assuming neutral brevity is a personal vendetta is a textbook self-referential cognitive distortion.',
+      },
+      {
+        id: 'o2',
+        label: 'B',
+        intent: 'Time-Constrained Executive Efficiency',
+        isCorrect: true,
+        explanation: 'Under high schedule pressure, concise commands optimize team throughput. It carries zero hidden personal malice.',
+      },
+      {
+        id: 'o3',
+        label: 'C',
+        intent: 'Covert Manipulation',
+        isCorrect: false,
+        explanation: 'Direct pacing requests are transparent, not manipulative.',
+      },
+      {
+        id: 'o4',
+        label: 'D',
+        intent: 'Passive-Aggressive Retaliation',
+        isCorrect: false,
+        explanation: 'Pacing constraints are standard operational leadership.',
+      },
+    ],
+    trapExplanation: 'Do not take offense or freeze. Provide a crisp 15-second bullet update with zero defensive emotion.',
+  },
+  {
+    id: 'fd-6',
+    speaker: 'Acquaintance in Group Chat',
+    context: 'Planning a group dinner reservation',
+    dialogue: '"Everyone wants to go to Nobu except you. Are you going to be difficult, or can I just book the table?"',
+    category: 'boundary-probe',
+    options: [
+      {
+        id: 'o1',
+        label: 'A',
+        intent: 'False Consensus & Coercive Labeling',
+        isCorrect: true,
+        explanation: 'Manufactures the illusion of unanimous agreement ("everyone wants") while preemptively labeling dissent as "being difficult".',
+      },
+      {
+        id: 'o2',
+        label: 'B',
+        intent: 'Democratic Voting Facilitation',
+        isCorrect: false,
+        explanation: 'Democratic facilitation polls individuals; it does not shame outliers.',
+      },
+      {
+        id: 'o3',
+        label: 'C',
+        intent: 'Empathetic Inclusion',
+        isCorrect: false,
+        explanation: 'Calling someone "difficult" is the opposite of empathy.',
+      },
+      {
+        id: 'o4',
+        label: 'D',
+        intent: 'Financial Advisory Guidance',
+        isCorrect: false,
+        explanation: 'No financial guidance is present.',
+      },
+    ],
+    trapExplanation: 'Reject the "difficult" frame: "Nobu doesn’t fit my budget tonight. You all should go ahead without me and have a great time!"',
+  },
+  {
+    id: 'fd-7',
+    speaker: 'Executive in Cross-Functional Meeting',
+    context: 'After a disagreement on strategy',
+    dialogue: '"I appreciate the passion, but let’s let the adults in the room decide the strategy."',
+    category: 'status-test',
+    options: [
+      {
+        id: 'o1',
+        label: 'A',
+        intent: 'Infantilizing Dominance Display',
+        isCorrect: true,
+        explanation: 'Frames you as an emotional child ("passion", "adults in the room") to dismiss your technical arguments without evaluating evidence.',
+      },
+      {
+        id: 'o2',
+        label: 'B',
+        intent: 'Valid Age-Based Governance',
+        isCorrect: false,
+        explanation: 'Corporate decisions are governed by fiduciary responsibility and metrics, not condescending labels.',
+      },
+      {
+        id: 'o3',
+        label: 'C',
+        intent: 'Supportive Mentorship Praise',
+        isCorrect: false,
+        explanation: 'Calling your input immature passion is a power assertion, not praise.',
+      },
+      {
+        id: 'o4',
+        label: 'D',
+        intent: 'Consensus Building Protocol',
+        isCorrect: false,
+        explanation: 'Exclusionary language destroys consensus.',
+      },
+    ],
+    trapExplanation: 'Stay ice cold: "My proposal is based on the 18% churn reduction data in slide 3, not passion. Let’s look at the financial model."',
+  },
+  {
+    id: 'fd-8',
+    speaker: 'Collaborator',
+    context: 'Asking for your research code before you publish',
+    dialogue: '"We’re friends, right? Real friends don’t hide their code from each other. Send me the repo link."',
+    category: 'manipulation',
+    options: [
+      {
+        id: 'o1',
+        label: 'A',
+        intent: 'Emotional Extortion & Weaponized Loyalty',
+        isCorrect: true,
+        explanation: 'Conditions friendship on surrendering your intellectual property before official co-author agreements are signed.',
+      },
+      {
+        id: 'o2',
+        label: 'B',
+        intent: 'Innocent Collaborative Curiosity',
+        isCorrect: false,
+        explanation: 'Innocent peers ask to review code together; they do not say "if you were a real friend".',
+      },
+      {
+        id: 'o3',
+        label: 'C',
+        intent: 'Academic Integrity Audit',
+        isCorrect: false,
+        explanation: 'Peer audits follow formal lab protocols.',
+      },
+      {
+        id: 'o4',
+        label: 'D',
+        intent: 'Software Licensing Enforcement',
+        isCorrect: false,
+        explanation: 'No licensing parameters were stated.',
+      },
+    ],
+    trapExplanation: 'Invert the loyalty test: "A real friend wouldn’t ask me to jeopardize our lab’s publication priority before pre-print registration."',
+  },
+  {
+    id: 'fd-9',
+    speaker: 'Quiet Colleague in 1-on-1',
+    context: 'Looking down at hands, speaking with a slight tremble',
+    dialogue: '"I know I’m not as senior as you, but I noticed something in the database query that might be a memory leak..."',
+    category: 'appeasement',
+    options: [
+      {
+        id: 'o1',
+        label: 'A',
+        intent: 'Passive-Aggressive Sabotage',
+        isCorrect: false,
+        explanation: 'Their vulnerable body language indicates genuine anxiety, not sabotage.',
+      },
+      {
+        id: 'o2',
+        label: 'B',
+        intent: 'Vulnerable & Constructive Dissent',
+        isCorrect: true,
+        explanation: 'They observed a real technical risk and overcame social anxiety to alert you. This must be praised and protected.',
+      },
+      {
+        id: 'o3',
+        label: 'C',
+        intent: 'Territorial Power Play',
+        isCorrect: false,
+        explanation: 'The apologetic preface demonstrates deep deference, not a power play.',
+      },
+      {
+        id: 'o4',
+        label: 'D',
+        intent: 'Sarcastic Diminishment',
+        isCorrect: false,
+        explanation: 'Zero sarcasm is present.',
+      },
+    ],
+    trapExplanation: 'Encourage and elevate them: "Thank you for spotting that! Pull up your chair, show me the query lines, and let’s fix it together."',
+  },
+  {
+    id: 'fd-10',
+    speaker: 'Department Director',
+    context: 'During an informal hallway conversation',
+    dialogue: '"I hear great things about your work. What do you think is holding back the rest of your squad?"',
+    category: 'boundary-probe',
+    options: [
+      {
+        id: 'o1',
+        label: 'A',
+        intent: 'Invitation to Back-Channel Gossip & Loyalty Test',
+        isCorrect: true,
+        explanation: 'Tests whether you will betray peer solidarity by throwing teammates under the bus for personal advancement.',
+      },
+      {
+        id: 'o2',
+        label: 'B',
+        intent: 'Standard HR Performance Review',
+        isCorrect: false,
+        explanation: 'Hallway inquiries are informal probes, not structured reviews.',
+      },
+      {
+        id: 'o3',
+        label: 'C',
+        intent: 'Executive Mentorship Praise',
+        isCorrect: false,
+        explanation: 'Flattery is used as bait to solicit gossip.',
+      },
+      {
+        id: 'o4',
+        label: 'D',
+        intent: 'Immediate Budget Allocation',
+        isCorrect: false,
+        explanation: 'No resource discussion exists here.',
+      },
+    ],
+    trapExplanation: 'Never speak ill of peers in informal hallway tests. Frame challenges systemically: "Our engineers are sharp; our main bottleneck is legacy CI/CD tooling."',
+  },
+];

@@ -15,7 +15,10 @@ import {
   Activity,
   User,
   Menu,
-  X
+  X,
+  Zap,
+  Award,
+  Flame,
 } from 'lucide-react';
 import { useApp } from '../../state/AppContext';
 import { NavigationDestination } from '../../types';
@@ -26,6 +29,7 @@ interface NavItem {
   label: string;
   icon: React.ElementType;
   badge?: string | number;
+  highlight?: boolean;
 }
 
 export const Sidebar: React.FC = () => {
@@ -36,6 +40,7 @@ export const Sidebar: React.FC = () => {
     overallStage,
     journalEntries,
     progress,
+    levelInfo,
   } = useApp();
 
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -44,6 +49,8 @@ export const Sidebar: React.FC = () => {
   const navItems: NavItem[] = [
     { id: 'overview', label: 'Overview', icon: Compass },
     { id: 'simulator', label: 'Training Room', icon: PlaySquare, badge: completedScenarioCount > 0 ? `${completedScenarioCount}/32` : undefined },
+    { id: 'flash-drills', label: 'Flash Drills', icon: Zap, badge: 'RAPID', highlight: true },
+    { id: 'achievements', label: 'Accolades & Rank', icon: Award, badge: `Lvl ${levelInfo.level}` },
     { id: 'modules', label: 'Modules', icon: BookOpen },
     { id: 'assessment', label: 'Assessment', icon: CheckCircle2 },
     { id: 'progress', label: 'Progress Report', icon: TrendingUp },
@@ -116,7 +123,7 @@ export const Sidebar: React.FC = () => {
                     WHITE ROOM
                   </span>
                   <span className="font-mono text-[10px] text-room-muted dark:text-room-darkMuted tracking-wider uppercase">
-                    System v1.0
+                    Operator OS v2.0
                   </span>
                 </div>
               )}
@@ -134,7 +141,7 @@ export const Sidebar: React.FC = () => {
           </div>
 
           {/* Navigation Items */}
-          <nav className="p-3 space-y-1 overflow-y-auto max-h-[calc(100vh-210px)]">
+          <nav className="p-3 space-y-1 overflow-y-auto max-h-[calc(100vh-230px)]">
             {navItems.map(item => {
               const Icon = item.icon;
               const isActive = destination === item.id;
@@ -150,12 +157,16 @@ export const Sidebar: React.FC = () => {
                   title={isCollapsed ? item.label : undefined}
                 >
                   <div className="flex items-center space-x-3">
-                    <Icon size={18} className="flex-shrink-0" />
+                    <Icon size={18} className={`flex-shrink-0 ${item.highlight ? 'text-amber-500' : ''}`} />
                     {!isCollapsed && <span className="tracking-tight">{item.label}</span>}
                   </div>
 
                   {!isCollapsed && item.badge !== undefined && (
-                    <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-room-border/60 dark:bg-room-darkBorder text-room-text dark:text-room-darkText font-semibold">
+                    <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded font-semibold ${
+                      item.highlight 
+                        ? 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/30' 
+                        : 'bg-room-border/60 dark:bg-room-darkBorder text-room-text dark:text-room-darkText'
+                    }`}>
                       {item.badge}
                     </span>
                   )}
@@ -175,7 +186,9 @@ export const Sidebar: React.FC = () => {
           <div
             className={`flex items-center ${
               isCollapsed ? 'justify-center' : 'space-x-3'
-            } p-2 rounded`}
+            } p-2 rounded cursor-pointer hover:bg-room-subtle/60 dark:hover:bg-room-darkSubtle/60 transition-colors`}
+            onClick={() => handleNavClick('achievements')}
+            title="View Accolades & Level Details"
           >
             <div className="w-8 h-8 rounded-full border border-room-border dark:border-room-darkBorder bg-room-surface dark:bg-room-darkSurface flex items-center justify-center flex-shrink-0">
               <User size={15} className="text-room-text dark:text-room-darkText" />
@@ -185,16 +198,21 @@ export const Sidebar: React.FC = () => {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between">
                   <span className="text-xs font-mono font-medium truncate">Candidate #048</span>
-                  <span className="flex h-2 w-2 relative">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
-                  </span>
+                  <div className="flex items-center gap-1 text-[11px] font-mono text-amber-500 font-semibold" title="Daily Streak">
+                    <Flame size={12} className="fill-amber-500" />
+                    <span>{progress.streak || 1}d</span>
+                  </div>
                 </div>
-                <div className="flex items-center space-x-1.5 mt-0.5">
-                  <Shield size={11} className="text-room-muted dark:text-room-darkMuted" />
-                  <span className="text-[11px] text-room-muted dark:text-room-darkMuted font-mono">
-                    Stage: <span className="text-room-text dark:text-room-darkText font-semibold">{overallStage}</span>
-                  </span>
+                <div className="flex items-center justify-between text-[10px] text-room-muted dark:text-room-darkMuted font-mono mt-0.5">
+                  <span className="truncate">{levelInfo.title}</span>
+                  <span className="font-semibold text-room-text dark:text-room-darkText">Lvl {levelInfo.level}</span>
+                </div>
+                {/* Mini XP Progress Bar */}
+                <div className="w-full h-1 bg-room-border/60 dark:bg-room-darkBorder rounded-full mt-1.5 overflow-hidden">
+                  <div 
+                    className="h-full bg-room-text dark:bg-room-darkText transition-all duration-500"
+                    style={{ width: `${Math.round(levelInfo.progressPercent * 100)}%` }}
+                  />
                 </div>
               </div>
             )}

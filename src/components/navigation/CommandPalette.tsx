@@ -14,6 +14,8 @@ import {
   Moon,
   ArrowRight,
   X,
+  Zap,
+  Award,
 } from 'lucide-react';
 import { useApp } from '../../state/AppContext';
 import { ALL_SCENARIOS, searchScenarios } from '../../data/scenarios';
@@ -81,6 +83,28 @@ export const CommandPalette: React.FC = () => {
       icon: PlaySquare,
       perform: () => {
         setDestination('simulator');
+        setIsCommandPaletteOpen(false);
+      },
+    },
+    {
+      id: 'cmd-flash-drills',
+      type: 'action',
+      label: 'Launch Flash Intent Drills',
+      subtitle: '8-second rapid psychological decoder challenges with combo multipliers',
+      icon: Zap,
+      perform: () => {
+        setDestination('flash-drills');
+        setIsCommandPaletteOpen(false);
+      },
+    },
+    {
+      id: 'cmd-achievements',
+      type: 'action',
+      label: 'View Accolades & Operator Rank',
+      subtitle: 'Check unlocked badges, level milestones, and XP progression',
+      icon: Award,
+      perform: () => {
+        setDestination('achievements');
         setIsCommandPaletteOpen(false);
       },
     },

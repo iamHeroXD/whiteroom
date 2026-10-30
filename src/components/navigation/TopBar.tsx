@@ -5,10 +5,11 @@ import {
   Search,
   Volume2,
   VolumeX,
-  HelpCircle,
-  PlaySquare,
+  Radio,
+  Zap,
+  Award,
   Sparkles,
-  Compass,
+  Flame,
 } from 'lucide-react';
 import { useApp } from '../../state/AppContext';
 import { NavigationDestination } from '../../types';
@@ -22,6 +23,8 @@ export const TopBar: React.FC = () => {
     updatePreferences,
     setIsCommandPaletteOpen,
     setIsOnboardingOpen,
+    levelInfo,
+    progress,
   } = useApp();
 
   const getPageTitle = (dest: NavigationDestination): { title: string; category?: string } => {
@@ -36,6 +39,10 @@ export const TopBar: React.FC = () => {
         return { title: 'Module Specification', category: 'Curriculum' };
       case 'simulator':
         return { title: 'Situation Simulator', category: 'Live Environment' };
+      case 'flash-drills':
+        return { title: 'Rapid Intent Decoders', category: 'Flash Reflex Training' };
+      case 'achievements':
+        return { title: 'Operator Accolades', category: 'Progression & Ranks' };
       case 'assessment':
         return { title: 'EQ Baseline Assessment', category: 'Diagnostic Evaluation' };
       case 'progress':
@@ -56,7 +63,7 @@ export const TopBar: React.FC = () => {
   const { title, category } = getPageTitle(destination);
 
   return (
-    <header className="h-16 border-b border-room-border dark:border-room-darkBorder bg-room-surface/80 dark:bg-room-darkSurface/80 backdrop-blur-md px-6 flex items-center justify-between sticky top-0 z-10 transition-colors">
+    <header className="h-16 border-b border-room-border dark:border-room-darkBorder bg-room-surface/80 dark:bg-room-darkSurface/80 backdrop-blur-md px-4 sm:px-6 flex items-center justify-between sticky top-0 z-10 transition-colors">
       {/* Breadcrumb / Title */}
       <div className="flex items-center space-x-3">
         <div className="hidden sm:block">
@@ -77,61 +84,62 @@ export const TopBar: React.FC = () => {
         {/* Command Search Palette trigger */}
         <button
           onClick={() => setIsCommandPaletteOpen(true)}
-          className="flex items-center space-x-2 px-3 py-1.5 text-xs rounded border border-room-border dark:border-room-darkBorder bg-room-bg dark:bg-room-darkBg text-room-muted dark:text-room-darkMuted hover:text-room-text dark:hover:text-room-darkText hover:border-room-muted transition-all"
+          className="flex items-center space-x-2 px-2.5 sm:px-3 py-1.5 text-xs rounded border border-room-border dark:border-room-darkBorder bg-room-bg dark:bg-room-darkBg text-room-muted dark:text-room-darkMuted hover:text-room-text dark:hover:text-room-darkText hover:border-room-muted transition-all"
           title="Open Command Palette (Ctrl+K or Cmd+K)"
         >
           <Search size={14} />
           <span className="hidden md:inline font-mono">Search drills or jumps...</span>
           <kbd className="hidden sm:inline-flex items-center space-x-0.5 px-1.5 py-0.5 text-[10px] font-mono bg-room-subtle dark:bg-room-darkSubtle rounded border border-room-border dark:border-room-darkBorder">
-            <span>⌘</span>
-            <span>K</span>
+            <span>⌘K</span>
           </kbd>
         </button>
 
-        {/* Quick Simulator Resume Button if not in simulator */}
-        {destination !== 'simulator' && destination !== 'intro' && (
-          <button
-            onClick={() => {
-              sounds.playClick(preferences.soundEnabled);
-              setDestination('simulator');
-            }}
-            className="hidden lg:flex items-center space-x-1.5 px-3 py-1.5 text-xs font-mono font-medium rounded bg-room-text dark:bg-room-darkText text-room-surface dark:text-room-darkBg hover:opacity-90 transition-opacity"
-          >
-            <PlaySquare size={13} />
-            <span>Enter Simulator</span>
-          </button>
-        )}
-
-        {/* System Tour / Quick Guide Button */}
+        {/* Operator Level Pill (clickable to accolades) */}
         <button
           onClick={() => {
             sounds.playClick(preferences.soundEnabled);
-            setIsOnboardingOpen(true);
+            setDestination('achievements');
           }}
-          className="flex items-center space-x-1 px-2.5 py-1.5 rounded border border-room-border dark:border-room-darkBorder text-xs font-mono text-room-muted hover:text-room-text dark:hover:text-room-darkText transition-colors"
-          title="How White Room Works"
+          className="hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded text-xs font-mono border border-room-border dark:border-room-darkBorder bg-room-subtle dark:bg-room-darkSubtle hover:border-room-text/40 dark:hover:border-room-darkText/40 transition-all text-room-text dark:text-room-darkText"
+          title={`Level ${levelInfo.level} · ${progress.xp || 0} XP`}
         >
-          <Sparkles size={13} className="text-amber-500" />
-          <span className="hidden sm:inline">Guide</span>
+          <Award size={13} className="text-amber-500" />
+          <span className="font-semibold">Lvl {levelInfo.level}</span>
+          <span className="text-room-muted hidden lg:inline">({progress.xp || 0} XP)</span>
         </button>
 
-        {/* Sound toggle */}
+        {/* Ambient Sound Drone Toggle */}
         <button
           onClick={() => {
-            const next = !preferences.soundEnabled;
-            if (next) sounds.playSuccess(true);
-            updatePreferences({ soundEnabled: next });
+            sounds.playClick(preferences.soundEnabled);
+            updatePreferences({ ambientSound: !preferences.ambientSound });
           }}
-          className={`p-2 rounded border border-room-border dark:border-room-darkBorder hover:bg-room-subtle dark:hover:bg-room-darkSubtle transition-colors ${
-            preferences.soundEnabled ? 'text-room-text dark:text-room-darkText' : 'text-room-muted dark:text-room-darkMuted'
+          className={`flex items-center gap-1 px-2 py-1.5 rounded border text-xs font-mono transition-all ${
+            preferences.ambientSound
+              ? 'bg-emerald-500/10 border-emerald-500/40 text-emerald-600 dark:text-emerald-400'
+              : 'border-room-border dark:border-room-darkBorder text-room-muted hover:text-room-text dark:hover:text-room-darkText'
           }`}
-          title={preferences.soundEnabled ? 'Sound Enabled' : 'Sound Muted'}
-          aria-label="Toggle Sound"
+          title={preferences.ambientSound ? "Mute Atmospheric Drone" : "Enable Focus Drone Sound"}
+        >
+          <Radio size={13} className={preferences.ambientSound ? "animate-pulse" : ""} />
+          <span className="hidden xl:inline text-[10px]">AMBIENT</span>
+        </button>
+
+        {/* Sound Effects Toggle */}
+        <button
+          onClick={() => {
+            const nextSound = !preferences.soundEnabled;
+            updatePreferences({ soundEnabled: nextSound });
+            if (nextSound) sounds.playClick(true);
+          }}
+          className="p-1.5 rounded text-room-muted hover:text-room-text dark:hover:text-room-darkText transition-colors"
+          title={preferences.soundEnabled ? 'Disable UI Audio' : 'Enable UI Audio'}
+          aria-label={preferences.soundEnabled ? 'Disable Audio' : 'Enable Audio'}
         >
           {preferences.soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
         </button>
 
-        {/* Theme toggle */}
+        {/* Theme Toggle (Light / Dark) */}
         <button
           onClick={() => {
             sounds.playClick(preferences.soundEnabled);
@@ -139,21 +147,11 @@ export const TopBar: React.FC = () => {
               theme: preferences.theme === 'dark' ? 'light' : 'dark',
             });
           }}
-          className="p-2 rounded border border-room-border dark:border-room-darkBorder text-room-text dark:text-room-darkText hover:bg-room-subtle dark:hover:bg-room-darkSubtle transition-colors"
+          className="p-1.5 rounded text-room-muted hover:text-room-text dark:hover:text-room-darkText transition-colors"
           title={`Switch to ${preferences.theme === 'dark' ? 'Light' : 'Dark'} Mode`}
           aria-label="Toggle Theme"
         >
           {preferences.theme === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
-        </button>
-
-        {/* Methodology quick link */}
-        <button
-          onClick={() => setDestination('methodology')}
-          className="p-2 rounded border border-room-border dark:border-room-darkBorder text-room-muted hover:text-room-text dark:text-room-darkMuted dark:hover:text-room-darkText hover:bg-room-subtle dark:hover:bg-room-darkSubtle transition-colors"
-          title="Methodology Guide"
-          aria-label="Methodology Guide"
-        >
-          <HelpCircle size={16} />
         </button>
       </div>
     </header>

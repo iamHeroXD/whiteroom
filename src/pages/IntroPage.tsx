@@ -11,6 +11,7 @@ import {
   Info,
   Check,
   X as XIcon,
+  Zap,
 } from 'lucide-react';
 import { useApp } from '../state/AppContext';
 import { TRAINING_MODULES } from '../data/modules';
@@ -106,7 +107,10 @@ export const IntroPage: React.FC = () => {
         {/* Hero CTAs */}
         <div className="flex flex-col sm:flex-row items-center gap-4">
           <button
-            onClick={() => setDestination('overview')}
+            onClick={() => {
+              sounds.playClick(preferences.soundEnabled);
+              setDestination('overview');
+            }}
             className="w-full sm:w-auto px-8 py-4 rounded bg-room-text dark:bg-room-darkText text-room-surface dark:text-room-darkBg font-mono text-xs uppercase tracking-widest font-semibold hover:opacity-90 active:scale-[0.99] transition-all flex items-center justify-center space-x-3 shadow-lg"
           >
             <span>ENTER THE WHITE ROOM</span>
@@ -114,8 +118,22 @@ export const IntroPage: React.FC = () => {
           </button>
 
           <button
-            onClick={() => setDestination('methodology')}
-            className="w-full sm:w-auto px-8 py-4 rounded border border-room-border dark:border-room-darkBorder bg-room-surface/60 dark:bg-room-darkSurface/60 text-room-text dark:text-room-darkText font-mono text-xs uppercase tracking-widest font-medium hover:bg-room-subtle dark:hover:bg-room-darkSubtle transition-all"
+            onClick={() => {
+              sounds.playClick(preferences.soundEnabled);
+              setDestination('flash-drills');
+            }}
+            className="w-full sm:w-auto px-6 py-4 rounded border border-amber-500/40 bg-amber-500/10 text-amber-600 dark:text-amber-400 font-mono text-xs uppercase tracking-widest font-semibold hover:bg-amber-500/20 transition-all flex items-center justify-center space-x-2"
+          >
+            <Zap size={15} />
+            <span>RAPID FLASH DRILL (8s)</span>
+          </button>
+
+          <button
+            onClick={() => {
+              sounds.playClick(preferences.soundEnabled);
+              setDestination('methodology');
+            }}
+            className="w-full sm:w-auto px-6 py-4 rounded border border-room-border dark:border-room-darkBorder bg-room-surface/60 dark:bg-room-darkSurface/60 text-room-text dark:text-room-darkText font-mono text-xs uppercase tracking-widest font-medium hover:bg-room-subtle dark:hover:bg-room-darkSubtle transition-all"
           >
             EXPLORE THE METHOD
           </button>

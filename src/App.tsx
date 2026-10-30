@@ -12,6 +12,8 @@ import { JournalPage } from './pages/JournalPage';
 import { SavedPage } from './pages/SavedPage';
 import { SettingsPage } from './pages/SettingsPage';
 import { MethodologyPage } from './pages/MethodologyPage';
+import { FlashDrillsPage } from './pages/FlashDrillsPage';
+import { AchievementsPage } from './pages/AchievementsPage';
 
 export const AppContent: React.FC = () => {
   const { destination } = useApp();
@@ -28,6 +30,10 @@ export const AppContent: React.FC = () => {
         return <ModuleDetailPage />;
       case 'simulator':
         return <SimulatorPage />;
+      case 'flash-drills':
+        return <FlashDrillsPage />;
+      case 'achievements':
+        return <AchievementsPage />;
       case 'assessment':
         return <AssessmentPage />;
       case 'progress':

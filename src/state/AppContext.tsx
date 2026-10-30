@@ -15,6 +15,8 @@ import {
   DEMO_SCENARIO_ATTEMPTS,
   DEMO_ASSESSMENT_RESULT,
 } from '../data/demoData';
+import { ACHIEVEMENTS, calculateLevelFromXP } from '../data/achievements';
+import { sounds } from '../utils/audio';
 
 interface AppContextType {
   // Navigation
@@ -39,6 +41,14 @@ interface AppContextType {
   toggleSaveScenario: (scenarioId: string) => boolean;
   isScenarioSaved: (scenarioId: string) => boolean;
   
+  // Gamification & XP
+  addXP: (amount: number, reason?: string) => void;
+  unlockAchievement: (id: string) => void;
+  incrementPauseCount: () => void;
+  recordFlashDrillScore: (score: number) => void;
+  levelInfo: ReturnType<typeof calculateLevelFromXP>;
+  newAchievementToast: string | null;
+
   // Journal
   journalEntries: JournalEntry[];
   addJournalEntry: (entry: Omit<JournalEntry, 'id' | 'timestamp'>) => void;
@@ -59,13 +69,13 @@ interface AppContextType {
   completedScenarioCount: number;
 }
 
-const STORAGE_KEY = 'whiteroom_state_v1';
+const STORAGE_KEY = 'whiteroom_state_v2';
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
 
 function getInitialProgress(): UserProgress {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY);
+    const raw = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('whiteroom_state_v1');
     if (raw) {
       const parsed = JSON.parse(raw);
       if (parsed && typeof parsed === 'object') {
@@ -77,6 +87,12 @@ function getInitialProgress(): UserProgress {
           preferences: { ...INITIAL_PREFERENCES, ...(parsed.preferences || {}) },
           currentStage: parsed.currentStage || 'Observer',
           lastActiveScenarioId: parsed.lastActiveScenarioId || 'sc-001',
+          xp: typeof parsed.xp === 'number' ? parsed.xp : 320,
+          streak: typeof parsed.streak === 'number' ? parsed.streak : 1,
+          lastActiveDate: parsed.lastActiveDate || new Date().toISOString().split('T')[0],
+          unlockedAchievements: Array.isArray(parsed.unlockedAchievements) ? parsed.unlockedAchievements : ['first-drill'],
+          flashDrillHighScore: typeof parsed.flashDrillHighScore === 'number' ? parsed.flashDrillHighScore : 0,
+          pauseCount: typeof parsed.pauseCount === 'number' ? parsed.pauseCount : 0,
         };
       }
     }
@@ -92,6 +108,12 @@ function getInitialProgress(): UserProgress {
     preferences: INITIAL_PREFERENCES,
     currentStage: 'Observer',
     lastActiveScenarioId: 'sc-001',
+    xp: 320,
+    streak: 1,
+    lastActiveDate: new Date().toISOString().split('T')[0],
+    unlockedAchievements: ['first-drill'],
+    flashDrillHighScore: 0,
+    pauseCount: 0,
   };
 }
 
@@ -102,6 +124,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
   const [activeModuleId, setActiveModuleId] = useState<ModuleCategory | undefined>('social-intelligence');
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const [isOnboardingOpen, setIsOnboardingOpen] = useState(false);
+  const [newAchievementToast, setNewAchievementToast] = useState<string | null>(null);
 
   // Sync to local storage
   useEffect(() => {
@@ -122,6 +145,32 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }
   }, [progress.preferences.theme]);
 
+  // Sync ambient sound drone
+  useEffect(() => {
+    if (progress.preferences.ambientSound) {
+      sounds.toggleAmbient(true);
+    } else {
+      sounds.toggleAmbient(false);
+    }
+    return () => {
+      sounds.toggleAmbient(false);
+    };
+  }, [progress.preferences.ambientSound]);
+
+  // Update daily streak
+  useEffect(() => {
+    const today = new Date().toISOString().split('T')[0];
+    if (progress.lastActiveDate !== today) {
+      const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
+      const continuesStreak = progress.lastActiveDate === yesterday;
+      setProgress(prev => ({
+        ...prev,
+        lastActiveDate: today,
+        streak: continuesStreak ? prev.streak + 1 : 1,
+      }));
+    }
+  }, [progress.lastActiveDate]);
+
   // Calculate current stage dynamically based on real attempts and reflections
   const calculatedStage = useMemo<TrainingStage>(() => {
     const attemptsCount = progress.attempts.length;
@@ -140,6 +189,11 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     return 'Observer';
   }, [progress.attempts, progress.journalEntries, progress.assessmentResults]);
 
+  // Level Info from XP
+  const levelInfo = useMemo(() => {
+    return calculateLevelFromXP(progress.xp || 0);
+  }, [progress.xp]);
+
   const updatePreferences = (updates: Partial<UserPreferences>) => {
     setProgress(prev => ({
       ...prev,
@@ -150,6 +204,60 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     }));
   };
 
+  const addXP = (amount: number, _reason?: string) => {
+    setProgress(prev => {
+      const nextXP = (prev.xp || 0) + amount;
+      return {
+        ...prev,
+        xp: nextXP,
+      };
+    });
+  };
+
+  const unlockAchievement = (id: string) => {
+    const target = ACHIEVEMENTS.find(a => a.id === id);
+    if (!target) return;
+
+    setProgress(prev => {
+      if (prev.unlockedAchievements.includes(id)) return prev;
+
+      setNewAchievementToast(`Achievement Unlocked: ${target.title} (+${target.xpReward} XP)`);
+      setTimeout(() => setNewAchievementToast(null), 4000);
+      sounds.playSuccess(prev.preferences.soundEnabled);
+
+      return {
+        ...prev,
+        xp: (prev.xp || 0) + target.xpReward,
+        unlockedAchievements: [...prev.unlockedAchievements, id],
+      };
+    });
+  };
+
+  const incrementPauseCount = () => {
+    setProgress(prev => {
+      const nextCount = (prev.pauseCount || 0) + 1;
+      if (nextCount >= 3) {
+        unlockAchievement('breath-master');
+      }
+      return {
+        ...prev,
+        pauseCount: nextCount,
+      };
+    });
+  };
+
+  const recordFlashDrillScore = (score: number) => {
+    setProgress(prev => {
+      if (score >= 5) {
+        unlockAchievement('flash-master');
+      }
+      return {
+        ...prev,
+        flashDrillHighScore: Math.max(prev.flashDrillHighScore || 0, score),
+      };
+    });
+  };
+
   const recordScenarioAttempt = (attemptData: Omit<ScenarioAttempt, 'id' | 'timestamp'>) => {
     const newAttempt: ScenarioAttempt = {
       ...attemptData,
@@ -157,12 +265,42 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       timestamp: Date.now(),
     };
 
+    // Evaluate grade
+    const avgScore = (
+      attemptData.scoreIndicators.emotionalRegulation * 0.35 +
+      attemptData.scoreIndicators.strategicThinking * 0.35 +
+      attemptData.scoreIndicators.socialAwareness * 0.2 +
+      attemptData.scoreIndicators.assertiveness * 0.1
+    );
+
+    let xpBonus = 50;
+    if (avgScore >= 90) {
+      xpBonus = 125;
+      unlockAchievement('s-rank-first');
+    } else if (avgScore >= 80) {
+      xpBonus = 90;
+    }
+
+    if (progress.preferences.pressureMode) {
+      xpBonus += 50;
+      unlockAchievement('pressure-veteran');
+    }
+
     setProgress(prev => {
-      // Filter out past attempt for same scenario if we only want unique or keep all for history
+      const nextAttempts = [newAttempt, ...prev.attempts];
+      const categoriesCovered = new Set(nextAttempts.map(a => a.category));
+      if (categoriesCovered.size >= 4) {
+        unlockAchievement('tactical-triad');
+      }
+      if (nextAttempts.length >= 1) {
+        unlockAchievement('first-drill');
+      }
+
       return {
         ...prev,
-        attempts: [newAttempt, ...prev.attempts],
+        attempts: nextAttempts,
         lastActiveScenarioId: newAttempt.scenarioId,
+        xp: (prev.xp || 0) + xpBonus,
       };
     });
   };
@@ -193,10 +331,17 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       timestamp: Date.now(),
       isDemo: false,
     };
-    setProgress(prev => ({
-      ...prev,
-      journalEntries: [newEntry, ...prev.journalEntries],
-    }));
+    setProgress(prev => {
+      const nextEntries = [newEntry, ...prev.journalEntries];
+      if (nextEntries.length >= 3) {
+        unlockAchievement('journal-scholar');
+      }
+      return {
+        ...prev,
+        journalEntries: nextEntries,
+        xp: (prev.xp || 0) + 40,
+      };
+    });
   };
 
   const updateJournalEntry = (id: string, updates: Partial<JournalEntry>) => {
@@ -222,6 +367,7 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
     setProgress(prev => ({
       ...prev,
       assessmentResults: [newResult, ...prev.assessmentResults],
+      xp: (prev.xp || 0) + 150,
     }));
   };
 
@@ -234,6 +380,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       preferences: progress.preferences,
       currentStage: 'Observer',
       lastActiveScenarioId: 'sc-001',
+      xp: 0,
+      streak: 1,
+      lastActiveDate: new Date().toISOString().split('T')[0],
+      unlockedAchievements: [],
+      flashDrillHighScore: 0,
+      pauseCount: 0,
     };
     setProgress(fresh);
   };
@@ -247,6 +399,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
       preferences: progress.preferences,
       currentStage: 'Observer',
       lastActiveScenarioId: 'sc-001',
+      xp: 450,
+      streak: 3,
+      lastActiveDate: new Date().toISOString().split('T')[0],
+      unlockedAchievements: ['first-drill', 's-rank-first'],
+      flashDrillHighScore: 4,
+      pauseCount: 1,
     };
     setProgress(sample);
   };
@@ -279,6 +437,12 @@ export const AppProvider: React.FC<{ children: ReactNode }> = ({ children }) => 
         recordScenarioAttempt,
         toggleSaveScenario,
         isScenarioSaved,
+        addXP,
+        unlockAchievement,
+        incrementPauseCount,
+        recordFlashDrillScore,
+        levelInfo,
+        newAchievementToast,
         journalEntries: progress.journalEntries,
         addJournalEntry,
         updateJournalEntry,

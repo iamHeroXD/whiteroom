@@ -10,6 +10,9 @@ import {
   Download,
   Info,
   Quote,
+  Zap,
+  Award,
+  Flame,
 } from 'lucide-react';
 import { useApp } from '../state/AppContext';
 import { ALL_SCENARIOS, getScenarioById } from '../data/scenarios';
@@ -28,6 +31,7 @@ export const OverviewPage: React.FC = () => {
     latestAssessment,
     setIsOnboardingOpen,
     preferences,
+    levelInfo,
   } = useApp();
 
   const [activeAxiomIndex, setActiveAxiomIndex] = useState(0);
@@ -283,6 +287,85 @@ export const OverviewPage: React.FC = () => {
           </button>
         </div>
       </section>
+
+      {/* Interactive Flash Drills & Operator Rank Modules Banner */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Flash Intent Drills Card */}
+        <div 
+          onClick={() => {
+            sounds.playClick(preferences.soundEnabled);
+            setDestination('flash-drills');
+          }}
+          className="p-6 rounded-xl border border-room-border dark:border-room-darkBorder bg-room-surface dark:bg-room-darkSurface hover:border-amber-500/50 transition-all cursor-pointer group relative overflow-hidden"
+        >
+          <div className="flex items-start justify-between">
+            <div className="p-2.5 rounded-lg bg-amber-500/10 text-amber-500 mb-3">
+              <Zap size={20} />
+            </div>
+            <span className="font-mono text-[10px] uppercase px-2 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 font-semibold border border-amber-500/30">
+              RAPID FIRE • 8s
+            </span>
+          </div>
+
+          <h3 className="text-lg font-medium text-room-text dark:text-room-darkText group-hover:text-amber-500 transition-colors">
+            Rapid Intent Decoders
+          </h3>
+          <p className="text-xs text-room-muted dark:text-room-darkMuted mt-1 leading-relaxed">
+            Test immediate social instinct under 8-second time pressure. Decode veiled sarcasm, unstated power plays, and subtext to rack up streak multipliers.
+          </p>
+
+          <div className="flex items-center justify-between mt-4 pt-3 border-t border-room-border/60 dark:border-room-darkBorder font-mono text-xs">
+            <span className="text-room-muted">
+              HIGH SCORE: <strong className="text-room-text dark:text-room-darkText">{progress.flashDrillHighScore || 0} PTS</strong>
+            </span>
+            <span className="text-amber-500 font-medium flex items-center gap-1 group-hover:translate-x-1 transition-transform">
+              LAUNCH DRILL →
+            </span>
+          </div>
+        </div>
+
+        {/* Operator Accolades & Rank Card */}
+        <div 
+          onClick={() => {
+            sounds.playClick(preferences.soundEnabled);
+            setDestination('achievements');
+          }}
+          className="p-6 rounded-xl border border-room-border dark:border-room-darkBorder bg-room-surface dark:bg-room-darkSurface hover:border-room-text/40 dark:hover:border-room-darkText/40 transition-all cursor-pointer group relative overflow-hidden"
+        >
+          <div className="flex items-start justify-between">
+            <div className="p-2.5 rounded-lg bg-room-subtle dark:bg-room-darkSubtle text-room-text dark:text-room-darkText mb-3">
+              <Award size={20} />
+            </div>
+            <div className="flex items-center gap-1 font-mono text-xs text-amber-500 font-semibold">
+              <Flame size={14} className="fill-amber-500" />
+              <span>{progress.streak || 1}d STREAK</span>
+            </div>
+          </div>
+
+          <div className="flex items-baseline gap-2">
+            <h3 className="text-lg font-medium text-room-text dark:text-room-darkText">
+              Lvl {levelInfo.level} — {levelInfo.title}
+            </h3>
+          </div>
+          <p className="text-xs text-room-muted dark:text-room-darkMuted mt-1 leading-relaxed">
+            Earn experience points through simulation outcomes, tactical diagnostic pauses, and assessment milestones to elevate your clearance grade.
+          </p>
+
+          {/* XP Progress Bar */}
+          <div className="mt-4 pt-3 border-t border-room-border/60 dark:border-room-darkBorder">
+            <div className="flex items-center justify-between font-mono text-[11px] text-room-muted mb-1.5">
+              <span>{progress.xp || 0} XP ACCRUED</span>
+              <span>{Math.round(levelInfo.progressPercent * 100)}% TO LVL {levelInfo.level + 1}</span>
+            </div>
+            <div className="w-full h-1.5 bg-room-border/60 dark:bg-room-darkBorder rounded-full overflow-hidden">
+              <div 
+                className="h-full bg-room-text dark:bg-room-darkText transition-all duration-500" 
+                style={{ width: `${Math.round(levelInfo.progressPercent * 100)}%` }}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
 
       {/* Two Column Layout: Skill Profile vs Recent Decisions */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">

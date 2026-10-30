@@ -4,6 +4,8 @@ export const INITIAL_PREFERENCES: UserPreferences = {
   theme: 'light',
   reducedMotion: false,
   soundEnabled: false,
+  ambientSound: false,
+  pressureMode: false,
   interfaceDensity: 'comfortable',
 };
 
